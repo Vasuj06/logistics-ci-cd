@@ -30,4 +30,8 @@ def create_order():
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(
+        host="0.0.0.0",   # 🔴 REQUIRED FOR DOCKER
+        port=5000,        # 🔴 MUST MATCH Dockerfile
+        debug=False
+    )

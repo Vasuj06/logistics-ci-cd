@@ -15,11 +15,9 @@ pipeline {
             }
         }
 
-        stage('Run Tests Inside Container') {
+        stage('Run Pytest Inside Container') {
             steps {
-                sh '''
-                docker run --rm logistics-app pytest
-                '''
+                sh 'docker run --rm logistics-app pytest'
             }
         }
 
