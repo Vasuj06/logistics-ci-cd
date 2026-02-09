@@ -2,26 +2,26 @@ pipeline {
     agent any
 
     stages {
+
         stage('Checkout Code') {
             steps {
                 checkout scm
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Build Docker Image') {
             steps {
-                dir('app') {
-                    sh 'pip install -r requirements.txt'
-                }
+                sh 'docker build -t logistics-app .'
             }
         }
 
-        stage('Run Tests') {
+        stage('Run Tests Inside Container') {
             steps {
-                dir('app') {
-                    sh 'pytest'
-                }
+                sh '''
+                docker run --rm logistics-app pytest
+                '''
             }
         }
+
     }
 }
