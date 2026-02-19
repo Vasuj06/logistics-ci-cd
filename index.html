@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>LogiTrack — Logistics Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --card: #161b24;
+    --border: #1e2530;
+    --accent: #00e5ff;
+    --accent2: #ff6b35;
+    --green: #00ff88;
+    --red: #ff3b5c;
+    --text: #e8edf5;
+    --muted: #5a6478;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px; left: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(0,229,255,0.07) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .orb2 {
+    position: fixed;
+    bottom: -200px; right: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(255,107,53,0.07) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .wrapper { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+  header { border-bottom: 1px solid var(--border); padding: 20px 0; animation: fadeDown 0.6s ease forwards; }
+  .header-inner { display: flex; align-items: center; justify-content: space-between; }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .logo-text { font-family: var(--font-display); font-size: 28px; letter-spacing: 2px; background: linear-gradient(90deg, var(--accent), var(--text)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .logo-sub { font-size: 11px; color: var(--muted); letter-spacing: 3px; text-transform: uppercase; font-weight: 500; }
+  .header-badge { display: flex; align-items: center; gap: 8px; background: var(--card); border: 1px solid var(--border); border-radius: 50px; padding: 8px 16px; font-size: 12px; font-family: var(--font-mono); color: var(--muted); }
+  .pulse-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+  main { padding: 48px 0; }
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; animation: fadeUp 0.7s ease 0.1s both; }
+  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; position: relative; overflow: hidden; transition: border-color 0.3s, transform 0.3s; }
+  .stat-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), transparent); }
+  .stat-icon { font-size: 28px; margin-bottom: 12px; }
+  .stat-value { font-family: var(--font-display); font-size: 36px; letter-spacing: 1px; color: var(--accent); }
+  .stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; letter-spacing: 1px; text-transform: uppercase; }
+  .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .health-card, .order-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 32px; }
+  .health-card { animation: fadeUp 0.7s ease 0.2s both; }
+  .order-card { animation: fadeUp 0.7s ease 0.3s both; }
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+  .card-title { font-family: var(--font-display); font-size: 22px; letter-spacing: 1px; }
+  .card-tag { font-size: 10px; font-family: var(--font-mono); color: var(--accent); background: rgba(0,229,255,0.1); border: 1px solid rgba(0,229,255,0.2); padding: 4px 10px; border-radius: 50px; }
+  .health-status-box { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; text-align: center; margin-bottom: 20px; }
+  .health-circle { width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; font-size: 32px; background: rgba(0,255,136,0.1); border: 2px solid var(--green); transition: all 0.5s ease; }
+  .health-circle.down { background: rgba(255,59,92,0.1); border-color: var(--red); }
+  .health-text { font-family: var(--font-display); font-size: 28px; letter-spacing: 2px; color: var(--green); transition: color 0.5s; }
+  .health-text.down { color: var(--red); }
+  .health-sub { font-size: 12px; color: var(--muted); margin-top: 4px; font-family: var(--font-mono); }
+  .btn { width: 100%; padding: 14px; border-radius: 12px; border: none; font-family: var(--font-body); font-size: 14px; font-weight: 600; cursor: pointer; letter-spacing: 1px; transition: all 0.2s ease; text-transform: uppercase; }
+  .btn-primary { background: var(--accent); color: var(--bg); }
+  .btn-primary:hover { background: #33eaff; transform: translateY(-1px); box-shadow: 0 8px 20px rgba(0,229,255,0.3); }
+  .btn-secondary { background: transparent; color: var(--accent2); border: 1px solid var(--accent2); margin-top: 10px; }
+  .btn-secondary:hover { background: rgba(255,107,53,0.1); transform: translateY(-1px); }
+  .response-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-top: 16px; font-family: var(--font-mono); font-size: 12px; color: var(--green); min-height: 60px; white-space: pre-wrap; word-break: break-all; display: none; }
+  .response-box.show { display: block; }
+  .response-box.error { color: var(--red); }
+  .form-group { margin-bottom: 16px; }
+  label { display: block; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; font-weight: 600; }
+  input, select { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; color: var(--text); font-family: var(--font-body); font-size: 14px; outline: none; transition: border-color 0.2s; }
+  input:focus, select:focus { border-color: var(--accent); }
+  select option { background: var(--surface); }
+  .log-card { grid-column: 1 / -1; background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 32px; animation: fadeUp 0.7s ease 0.4s both; }
+  .log-list { display: flex; flex-direction: column; gap: 10px; max-height: 220px; overflow-y: auto; }
+  .log-item { display: flex; align-items: center; gap: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; font-size: 13px; animation: fadeUp 0.3s ease both; }
+  .log-id { font-family: var(--font-mono); color: var(--accent); font-size: 12px; min-width: 100px; }
+  .log-item-name { flex: 1; color: var(--text); }
+  .log-status { font-size: 11px; font-family: var(--font-mono); color: var(--green); background: rgba(0,255,136,0.1); border: 1px solid rgba(0,255,136,0.2); padding: 3px 10px; border-radius: 50px; }
+  .log-time { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+  .empty-log { text-align: center; color: var(--muted); padding: 32px; font-size: 13px; }
+  footer { border-top: 1px solid var(--border); padding: 24px 0; margin-top: 24px; animation: fadeUp 0.7s ease 0.5s both; }
+  .footer-inner { display: flex; align-items: center; justify-content: space-between; }
+  .footer-left { font-size: 12px; color: var(--muted); font-family: var(--font-mono); }
+  .footer-right { display: flex; gap: 20px; }
+  .endpoint-badge { font-size: 11px; font-family: var(--font-mono); color: var(--muted); background: var(--surface); border: 1px solid var(--border); padding: 4px 10px; border-radius: 6px; }
+  .endpoint-badge span { color: var(--accent2); margin-right: 6px; }
+  @keyframes fadeDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.8); } }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(0,0,0,0.2); border-top-color: var(--bg); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="orb2"></div>
+<header>
+  <div class="wrapper">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">📦</div>
+        <div>
+          <div class="logo-text">LogiTrack</div>
+          <div class="logo-sub">Logistics Management System</div>
+        </div>
+      </div>
+      <div class="header-badge">
+        <div class="pulse-dot" id="headerDot"></div>
+        <span id="headerStatus">SYSTEM ONLINE</span>
+      </div>
+    </div>
+  </div>
+</header>
+<main>
+  <div class="wrapper">
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-icon">🚚</div>
+        <div class="stat-value" id="totalOrders">0</div>
+        <div class="stat-label">Orders Placed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">✅</div>
+        <div class="stat-value" id="successOrders">0</div>
+        <div class="stat-label">Successful</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⚡</div>
+        <div class="stat-value">v1.0</div>
+        <div class="stat-label">API Version</div>
+      </div>
+    </div>
+    <div class="main-grid">
+      <div class="health-card">
+        <div class="card-header">
+          <div class="card-title">System Health</div>
+          <div class="card-tag">GET /health</div>
+        </div>
+        <div class="health-status-box">
+          <div class="health-circle" id="healthCircle">💚</div>
+          <div class="health-text" id="healthText">CHECKING...</div>
+          <div class="health-sub" id="healthSub">Fetching status from API</div>
+        </div>
+        <button class="btn btn-primary" onclick="checkHealth()">🔄 Check Health</button>
+        <div class="response-box" id="healthResponse"></div>
+        <button class="btn btn-secondary" onclick="checkHome()">📡 Check Service Info</button>
+        <div class="response-box" id="homeResponse"></div>
+      </div>
+      <div class="order-card">
+        <div class="card-header">
+          <div class="card-title">Create Order</div>
+          <div class="card-tag">POST /order</div>
+        </div>
+        <div class="form-group">
+          <label>Order ID</label>
+          <input type="text" id="orderId" placeholder="e.g. ORD-001" />
+        </div>
+        <div class="form-group">
+          <label>Item Name</label>
+          <input type="text" id="itemName" placeholder="e.g. Laptop" />
+        </div>
+        <div class="form-group">
+          <label>Destination</label>
+          <input type="text" id="destination" placeholder="e.g. Mumbai, India" />
+        </div>
+        <div class="form-group">
+          <label>Priority</label>
+          <select id="priority">
+            <option>Standard</option>
+            <option>Express</option>
+            <option>Overnight</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="createOrder()">🚀 Place Order</button>
+        <div class="response-box" id="orderResponse"></div>
+      </div>
+      <div class="log-card">
+        <div class="card-header">
+          <div class="card-title">Order Log</div>
+          <div class="card-tag">LIVE FEED</div>
+        </div>
+        <div class="log-list" id="logList">
+          <div class="empty-log">No orders yet. Place your first order above! 📦</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+<footer>
+  <div class="wrapper">
+    <div class="footer-inner">
+      <div class="footer-left">Built by Vasu Joshi · Logistics CI/CD Project · 2026</div>
+      <div class="footer-right">
+        <div class="endpoint-badge"><span>GET</span>/health</div>
+        <div class="endpoint-badge"><span>GET</span>/</div>
+        <div class="endpoint-badge"><span>POST</span>/order</div>
+      </div>
+    </div>
+  </div>
+</footer>
+<script>
+  const API_BASE = 'http://13.126.42.105:5000';
+  let totalOrders = 0;
+  let successOrders = 0;
+  let orders = [];
+
+  async function checkHealth() {
+    const btn = event.target;
+    btn.innerHTML = '<span class="spinner"></span> Checking...';
+    btn.disabled = true;
+    const box = document.getElementById('healthResponse');
+    box.className = 'response-box';
+    try {
+      const res = await fetch(`${API_BASE}/health`);
+      const data = await res.json();
+      document.getElementById('healthCircle').className = 'health-circle';
+      document.getElementById('healthCircle').textContent = '💚';
+      document.getElementById('healthText').className = 'health-text';
+      document.getElementById('healthText').textContent = 'ONLINE';
+      document.getElementById('healthSub').textContent = 'All systems operational';
+      document.getElementById('headerDot').style.background = 'var(--green)';
+      document.getElementById('headerStatus').textContent = 'SYSTEM ONLINE';
+      box.textContent = JSON.stringify(data, null, 2);
+      box.className = 'response-box show';
+    } catch(e) {
+      document.getElementById('healthCircle').className = 'health-circle down';
+      document.getElementById('healthCircle').textContent = '❤️';
+      document.getElementById('healthText').className = 'health-text down';
+      document.getElementById('healthText').textContent = 'OFFLINE';
+      document.getElementById('healthSub').textContent = 'Cannot reach API server';
+      document.getElementById('headerDot').style.background = 'var(--red)';
+      document.getElementById('headerStatus').textContent = 'CONNECTION ERROR';
+      box.textContent = 'Error: Cannot connect to API\n' + e.message;
+      box.className = 'response-box show error';
+    }
+    btn.innerHTML = '🔄 Check Health';
+    btn.disabled = false;
+  }
+
+  async function checkHome() {
+    const box = document.getElementById('homeResponse');
+    box.className = 'response-box';
+    try {
+      const res = await fetch(`${API_BASE}/`);
+      const data = await res.json();
+      box.textContent = JSON.stringify(data, null, 2);
+      box.className = 'response-box show';
+    } catch(e) {
+      box.textContent = 'Error: ' + e.message;
+      box.className = 'response-box show error';
+    }
+  }
+
+  async function createOrder() {
+    const orderId = document.getElementById('orderId').value.trim();
+    const itemName = document.getElementById('itemName').value.trim();
+    const destination = document.getElementById('destination').value.trim();
+    const priority = document.getElementById('priority').value;
+    if (!orderId || !itemName) {
+      alert('Please fill in Order ID and Item Name!');
+      return;
+    }
+    const btn = event.target;
+    btn.innerHTML = '<span class="spinner"></span> Placing Order...';
+    btn.disabled = true;
+    const box = document.getElementById('orderResponse');
+    box.className = 'response-box';
+    try {
+      const res = await fetch(`${API_BASE}/order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_id: orderId, item: itemName, destination, priority })
+      });
+      const data = await res.json();
+      totalOrders++;
+      successOrders++;
+      document.getElementById('totalOrders').textContent = totalOrders;
+      document.getElementById('successOrders').textContent = successOrders;
+      orders.unshift({ orderId, itemName, destination, priority, time: new Date().toLocaleTimeString() });
+      renderLog();
+      box.textContent = JSON.stringify(data, null, 2);
+      box.className = 'response-box show';
+      document.getElementById('orderId').value = '';
+      document.getElementById('itemName').value = '';
+      document.getElementById('destination').value = '';
+    } catch(e) {
+      totalOrders++;
+      document.getElementById('totalOrders').textContent = totalOrders;
+      box.textContent = 'Error: ' + e.message;
+      box.className = 'response-box show error';
+    }
+    btn.innerHTML = '🚀 Place Order';
+    btn.disabled = false;
+  }
+
+  function renderLog() {
+    const list = document.getElementById('logList');
+    if (orders.length === 0) {
+      list.innerHTML = '<div class="empty-log">No orders yet. Place your first order above! 📦</div>';
+      return;
+    }
+    list.innerHTML = orders.map(o => `
+      <div class="log-item">
+        <div class="log-id">${o.orderId}</div>
+        <div class="log-item-name">${o.itemName} → ${o.destination || 'N/A'}</div>
+        <div class="log-status">CREATED</div>
+        <div class="log-time">${o.time}</div>
+      </div>
+    `).join('');
+  }
+
+  window.addEventListener('load', () => {
+    setTimeout(checkHealth, 800);
+  });
+</script>
+</body>
+</html>
