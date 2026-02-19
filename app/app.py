@@ -1,6 +1,8 @@
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route("/", methods=["GET"])
 def home():
@@ -10,12 +12,10 @@ def home():
         "version": "1.0"
     })
 
-# Health check endpoint (VERY IMPORTANT for DevOps)
 @app.route("/health", methods=["GET"])
 def health():
     return jsonify({"status": "UP"}), 200
 
-# Sample logistics API (create order)
 @app.route("/order", methods=["POST"])
 def create_order():
     data = request.get_json()
@@ -28,10 +28,9 @@ def create_order():
         "order_id": data["order_id"]
     }), 201
 
-
 if __name__ == "__main__":
     app.run(
-        host="0.0.0.0",   # 🔴 REQUIRED FOR DOCKER
-        port=5000,        # 🔴 MUST MATCH Dockerfile
+        host="0.0.0.0",
+        port=5000,
         debug=False
     )
